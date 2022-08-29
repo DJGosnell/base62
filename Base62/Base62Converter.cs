@@ -17,8 +17,8 @@ namespace Base62
         /// Initializes a new instance of <see cref="Base62Converter"/>.
         /// </summary>
         public Base62Converter()
+            : this(CharacterSet.DEFAULT)
         {
-            characterSet = DEFAULT_CHARACTER_SET;
         }
 
         /// <summary>
@@ -34,6 +34,61 @@ namespace Base62
         }
 
         /// <summary>
+        /// Initializes a new instance of <see cref="Base62Converter"/> with a randomized
+        /// character set order based upon the passed seed.
+        /// </summary>
+        /// <param name="randomSeed">Seed used to randomize the characters.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "SCS0005:Weak random number generator.", Justification = "<Pending>")]
+        public Base62Converter(int randomSeed)
+        {
+            char[] array = DEFAULT_CHARACTER_SET.ToCharArray();
+            Random rng = new Random(randomSeed);
+            int n = array.Length;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                var value = array[k];
+                array[k] = array[n];
+                array[n] = value;
+            }
+            characterSet = new string(array);
+        }
+
+        /// <summary>
+        /// Encodes the input text to Base62 format.
+        /// </summary>
+        /// <param name="value">The input value.</param>
+        /// <returns>Encoded base62 value.</returns>
+        public string EncodeBytesToString(byte[] value)
+        {
+            var converted = Encode(value);
+            var output = new char[converted.Length];
+
+            for (int i = 0; i < output.Length; i++)
+            {
+                output[i] = characterSet[converted[i]];
+            }
+
+            return new string(output);
+        }
+        /// <summary>
+        /// Decodes the input text from Base62 format.
+        /// </summary>
+        /// <param name="value">The input value.</param>
+        /// <returns>The decoded value.</returns>
+        public byte[] DecodeStringToBytes(string value)
+        {
+            var arr = new byte[value.Length];
+            for (var i = 0; i < arr.Length; i++)
+            {
+                arr[i] = (byte)characterSet.IndexOf(value[i]);
+            }
+
+            return Decode(arr);
+        }
+
+        /// <summary>
         /// Encodes the input text to Base62 format.
         /// </summary>
         /// <param name="value">The input value.</param>
@@ -42,12 +97,13 @@ namespace Base62
         {
             var arr = Encoding.UTF8.GetBytes(value);
             var converted = Encode(arr);
-            var builder = new StringBuilder();
-            foreach (var c in converted)
+            var output = new char[converted.Length];
+            for (var i = 0; i < converted.Length; i++)
             {
-                builder.Append(characterSet[c]);
+                output[i] = characterSet[converted[i]];
             }
-            return builder.ToString();
+
+            return new string(output);
         }
 
         /// <summary>

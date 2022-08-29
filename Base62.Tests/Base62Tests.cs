@@ -55,6 +55,18 @@ namespace Base62.Tests
             Assert.Equal(input, decoded);
         }
 
+        [Theory]
+        [MemberData(nameof(GetData))]
+        public void Can_RoundTripRandomCharacterSet(string input, string expected)
+        {
+            var converter1 = new Base62Converter(518815);
+            var converter2 = new Base62Converter(518815);
+            var encoded = converter1.Encode(input);
+            var decoded = converter2.Decode(encoded);
+
+            Assert.Equal(input, decoded);
+        }
+
         [Fact]
         public void FirstZeroBytesAreConvertedCorrectly()
         {
